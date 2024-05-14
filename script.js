@@ -23,10 +23,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Eventos
     infoIcon.addEventListener('click', function() {
-        modal.style.display = "block"; // Set display block first without opacity
-        modalContent.style.display = "block"; // Same for content
+        modal.style.display = "block"; 
+        modalContent.style.display = "block"; 
         requestAnimationFrame(() => {
-            // Use requestAnimationFrame to ensure the next frame shows the modal
             modal.classList.add('show');
             modalContent.classList.add('show');
         });
@@ -36,10 +35,9 @@ document.addEventListener('DOMContentLoaded', function() {
         modal.classList.remove('show');
         modalContent.classList.remove('show');
         setTimeout(() => {
-            // Wait for the opacity transition to finish before hiding
             modal.style.display = "none";
             modalContent.style.display = "none";
-        }, 400); // Match this time with your CSS opacity transition-duration
+        }, 400); 
     });
 
     window.addEventListener('click', function(event) {
@@ -49,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 modal.style.display = "none";
                 modalContent.style.display = "none";
-            }, 400); // Match this time with your CSS opacity transition-duration
+            }, 400); 
         }
     });
 
