@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>[RCC] Verificador de Requisitos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="icon" href="logo-rcc.png">
+</head>
+<body>
+    <div class="container">
+        <h1>Verificador de Requisitos <i class="fas fa-info-circle info-icon" aria-label="Mais informações"></i></h1>
+        <div class="modal" hidden>
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2>Informação sobre a Ferramenta</h2>
+                <p>A ferramenta foi desenvolvida para ajudar a verificar se os requisitos de tom de pele e acessórios estão em conformidade com os padrões necessários para o alistamento.</p>
+                <p>A ferramenta foi desenvolvida em abril de 2024 pelo militar <strong>mitojmcam</strong>, com uma especial atenção dada para garantir que o sistema seja acessível para daltônicos e que a RCC possa ser mais inclusiva e ter meios de acessibilidade.</p>
+                <p><strong>Para uma validação positiva, ambos os ícones devem estar com símbolos de check verde.<span class="check"></span></strong></p>
+            </div>
+        </div>
+        <input type="text" id="userInput" placeholder="Digite o nick aqui...">
+        <button id="searchButton">Pesquisar</button>
+        <div class="avatar-container">
+            <div class="spinner" hidden></div>
+            <img id="avatarImage" src="" alt="Avatar" />
+        </div>
+        <div class="info-container">
+            <p>Tom de pele: <span id="skinCheckTrue" class="check"></span><span id="skinCheckFalse" class="false" hidden></span></p>
+            <p>Rosto: <span id="makeupCheckTrue" class="check"></span><span id="makeupCheckFalse" class="false" hidden></span></p>
+        </div>
+        <footer>
+            <p>Desenvolvido por <strong>mitojmcam</strong></p>
+            <p>Todos os direitos reservados&reg;</p>
+            <img src="logo-rcc.png" alt="RCC Logo" class="logo-rcc"/>  <!-- Logotipo adicionado aqui -->
+        </footer>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+        // Elementos DOM
+        var infoIcon = document.querySelector('.info-icon');
+        var modal = document.querySelector('.modal');
+        var modalContent = document.querySelector('.modal-content');
+        var closeButton = document.querySelector('.close-button');
+        var closeButton = document.querySelector('.close-button');
+        var userInput = document.getElementById('userInput');
+        var avatarImage = document.getElementById('avatarImage');
+        var searchButton = document.getElementById('searchButton');
+        var spinner = document.getElementsByClassName('spinner')[0];
+        var skinCheckTrue = document.getElementById('skinCheckTrue');
+        var skinCheckFalse = document.getElementById('skinCheckFalse');
+        var makeupCheckTrue = document.getElementById('makeupCheckTrue');
+        var makeupCheckFalse = document.getElementById('makeupCheckFalse');
+
+        // Regex
+        var skinPattern = /hd-\d+-(10\b|1\b|1370\b|19\b|20\b|1371\b|30\b|1372\b|1373\b|1375\b|1379\b|1385\b|1386\b|1387\b|5\b|1389\b|4\b|1359\b|3\b|1390\b|1391\b|11\b|2\b|7\b|28\b)/;
+        var accessoriesPattern = /fa-/;
+
+        // Def
+        avatarImage.src = "https://www.habbo.com.br/habbo-imaging/avatarimage?img_format=png&user=mitojmcam&direction=4&head_direction=2&size=l&action=std";
+
+        // Eventos
+        infoIcon.addEventListener('click', function() {
+            modal.style.display = "block"; // Set display block first without opacity
+            modalContent.style.display = "block"; // Same for content
+            requestAnimationFrame(() => {
+                // Use requestAnimationFrame to ensure the next frame shows the modal
+                modal.classList.add('show');
+                modalContent.classList.add('show');
+            });
+        });
+
+        closeButton.addEventListener('click', function() {
+            modal.classList.remove('show');
+            modalContent.classList.remove('show');
+            setTimeout(() => {
+                // Wait for the opacity transition to finish before hiding
+                modal.style.display = "none";
+                modalContent.style.display = "none";
+            }, 400); // Match this time with your CSS opacity transition-duration
+        });
+
+        window.addEventListener('click', function(event) {
+            if (event.target == modal) {
+                modal.classList.remove('show');
+                modalContent.classList.remove('show');
+                setTimeout(() => {
+                    modal.style.display = "none";
+                    modalContent.style.display = "none";
+                }, 400); // Match this time with your CSS opacity transition-duration
+            }
+        });
+
+        searchButton.addEventListener('click', updateAvatar);
+        userInput.addEventListener('keyup', function(event) {
+            if (event.key === 'Enter' && userInput.value.trim() !== '') {
+                updateAvatar();
+            }
+        });
+
+        function showModal() {
+            modal.style.display = "block";
+        }
+
+        function hideModal() {
+            modal.style.display = "none";
+        }
+
+        function updateAvatar() {
+            var username = userInput.value.trim() || 'default';
+            var apiURL = `https://www.habbo.com.br/api/public/users?name=${encodeURIComponent(username)}`;
+            spinner.hidden = false;
+            avatarImage.style.display = 'none';
+            fetch(apiURL)
+                .then(response => response.json())
+                .then(data => {
+                    var figureString = data.figureString;
+                    var imageUrl = `https://sandbox.habbo.com/habbo-imaging/avatarimage?figure=${figureString}&gender=M&size=l&direction=2&head_direction=3`;
+                    avatarImage.src = imageUrl;
+                    avatarImage.onload = () => {
+                        spinner.hidden = true;
+                        avatarImage.style.display = 'block'; 
+                        updateChecks(figureString);
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao receber os dados:', error);
+                    spinner.hidden = true;
+                    showError("Erro ao receber os dados. Por favor, tente novamente.");
+                });
+        }
+
+        function updateChecks(figureString) {
+            skinCheckTrue.style.display = skinPattern.test(figureString) ? 'inline' : 'none';
+            skinCheckFalse.style.display = skinPattern.test(figureString) ? 'none' : 'inline';
+            makeupCheckTrue.style.display = accessoriesPattern.test(figureString) ? 'none' : 'inline';
+            makeupCheckFalse.style.display = accessoriesPattern.test(figureString) ? 'inline' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.textContent = message;
+            errorDiv.className = 'error-message';
+            document.body.appendChild(errorDiv);
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+    });
+
+    </script>
+</body>
+</html>
